@@ -108,6 +108,10 @@ header('Content-Type: text/html; charset=utf-8');
 			margin-top: 20px;
 		}
 
+		.mTop20{
+			margin-top: 20;
+		}
+
 		.rowEmail{
 			clear: both;
 		}
@@ -136,6 +140,10 @@ header('Content-Type: text/html; charset=utf-8');
 
 			<div class="rowEmail">				
 				<button type="button" class="btn btn-primary" id="btnEmail"><b>Enviar código e baixar E-book</b></button>				
+			</div>
+
+			<div class="rowEmail">				
+				<button type="button" style="display:none" class="btn btn-success mTop20" id="btnDownload"><b>Baixar E-book</b></button>				
 			</div>
 
 		
@@ -171,16 +179,13 @@ header('Content-Type: text/html; charset=utf-8');
     				$('#msgs').html("<i class='fa fa-check'></i> Um codigo foi enviado para você. Informe-o para iniciar o download!");
 					$('#msgs').removeClass("red");
 					$('#msgs').addClass("green");
-					$('#btnEmail').removeClass('btn-default');
-					$('#btnEmail').addClass('btn-success');
-					$('#btnEmail').attr('disabled','true');
-					$('#btnEmail').text('Baixar Livro');
+					$('#btnEmail').fadeOut(1000);
 
 					htmlValida = '<div class="form-group col-xs-2">'+
 									'<input type="text" class="form-control" id="cdgValidacao" aria-describedby="cdgValidacao" placeholder="Código">'+
 								'</div>'+
 								'<button type="button" class="btn btn-default" id="btnValidacao"> Validar Código </button>'+
-								'<button type="button" class="btn btn-default" id="btnCheck"></button>';
+								'<button type="button" style="display:none" class="btn btn-default" id="btnCheck"></button>';
 
 					$("#validacaoDownload").append(htmlValida);
 
@@ -214,13 +219,16 @@ header('Content-Type: text/html; charset=utf-8');
 	        data: postCdg,
 	        success: function (response) {
 	        	if(response == 'CDG_SUC'){
+	        		$('#btnCheck').attr('style','display:');
 	        		$('#btnCheck').removeClass();
 					$('#btnCheck').addClass('btn-success');
 					$('#btnCheck').html("<i class='fa fa-check'></i>");
     				$('#msgs').html("<i class='fa fa-check'></i> Obrigado! O seu download está disponivel agora.");
 					$('#validacaoDownload').fadeOut(1000);
+					$('#btnDownload').attr('style','display:block');
 
 	        	}else{
+	        		$('#btnCheck').attr('style','display:');
 	        		$('#btnCheck').removeClass();
 					$('#btnCheck').addClass('btn-danger');
 					$('#btnCheck').html("<i class='fa fa-times'></i>");
