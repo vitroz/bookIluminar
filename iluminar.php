@@ -7,24 +7,25 @@ header('Content-Type: text/html; charset=utf-8');
 	    $_POST = [];
 	}
 
-	function gera_codigo(){
-		$cdgs_array = ['850834','713684','259207','553831','936959','553875',
-						'327596','416868','683902','941604','886568','189475',
-						'749622','674729','873147','375941','703183','116903',
-						'974555','518039','956587','710721','487711','520914',
-						'593425','564442','599946','231398','823371','794700',
-						'781691','176358','419039','874843','491769','312736',
-						'193628','966934','225368','822239','879191','546938',
-						'512425','393420','698722','968507','168938','579869',
-						'898881','548826','614690','834835','886050','146138',
-						'170779','152351','327362','559130','330367','740324',
-						'615115','896257','795392','423394','693732','911633',
-						'279522','776777','542761','618106','659442','368557',
-						'592320','123468','173157','615861','975916','602272',
-						'139497','760514','745805','153123','736000','568882',
-						'312361','811464','933674','320738','157261','184735',
-						'975168','721042','181552','827955','132795','680536',
-						'964797','700887','889464','825281'];
+	$cdgs_array = ['850834','713684','259207','553831','936959','553875',
+					'327596','416868','683902','941604','886568','189475',
+					'749622','674729','873147','375941','703183','116903',
+					'974555','518039','956587','710721','487711','520914',
+					'593425','564442','599946','231398','823371','794700',
+					'781691','176358','419039','874843','491769','312736',
+					'193628','966934','225368','822239','879191','546938',
+					'512425','393420','698722','968507','168938','579869',
+					'898881','548826','614690','834835','886050','146138',
+					'170779','152351','327362','559130','330367','740324',
+					'615115','896257','795392','423394','693732','911633',
+					'279522','776777','542761','618106','659442','368557',
+					'592320','123468','173157','615861','975916','602272',
+					'139497','760514','745805','153123','736000','568882',
+					'312361','811464','933674','320738','157261','184735',
+					'975168','721042','181552','827955','132795','680536',
+					'964797','700887','889464','825281'];
+
+	function gera_codigo($cdgs_array){
 
 		$random_number = $cdgs_array[array_rand($cdgs_array)];
 
@@ -32,6 +33,8 @@ header('Content-Type: text/html; charset=utf-8');
 	}
 
 	if($_SERVER['REQUEST_METHOD'] === 'POST' AND $_POST['type'] == 'SENDMAIL'){
+
+		$emailUser = $_POST['emailUser'];
 
 		$mail = new PHPMailer;
 		$mail->isSMTP();                                   // Setando protocolo STMP
@@ -43,10 +46,10 @@ header('Content-Type: text/html; charset=utf-8');
 		$mail->Port = 587;                                 // Porta TCP utilizada (SMTP)
 		$mail->setFrom('someothermail@gmail.com', 'Instituto Iluminar');
 		$mail->addReplyTo('someothermail@gmail.com', 'Instituto Iluminar');
-		$mail->addAddress('vitorvqz@gmail.com'); // Email que recebera as mensagens
+		$mail->addAddress($emailUser); // Email que recebera as mensagens
 		$mail->isHTML(true);  // Conteudo formatado em HTML
 
-		$codigo = gera_codigo();
+		$codigo = gera_codigo($cdgs_array);
 
 		$bodyContent = '<h1>Para efetuar o download do livro copie o codigo abaixo e cole-o na pagina de download.</h1>';
 		$bodyContent .= '<p>Código:<h1>'.$codigo.'</h1></p>';
@@ -63,6 +66,15 @@ header('Content-Type: text/html; charset=utf-8');
 
 	if($_SERVER['REQUEST_METHOD'] === 'POST' AND $_POST['type'] == 'VALIDACAO'){
 
+		$cdgUser = $_POST['codigo'];
+
+		if (in_array($cdgUser, $cdgs_array)) {
+		    echo "CDG_SUC";
+		    exit();
+		}else{
+			echo "CDG_ERR";
+		    exit();
+		}
 
 		exit();
 	}
@@ -123,7 +135,7 @@ header('Content-Type: text/html; charset=utf-8');
 			</div>
 
 			<div class="rowEmail">				
-				<button type="button" class="btn btn-primary" id="btnEmail">Baixar Livro</button>				
+				<button type="button" class="btn btn-primary" id="btnEmail"><b>Enviar código e baixar E-book</b></button>				
 			</div>
 
 		
@@ -149,6 +161,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 			var postMail = [];
 	        postMail.push({name: 'type', value: 'SENDMAIL'});
+	        postMail.push({name: 'emailUser', value: email});
 
 			 $.ajax({
 		        url: "iluminar.php",
@@ -166,7 +179,8 @@ header('Content-Type: text/html; charset=utf-8');
 					htmlValida = '<div class="form-group col-xs-2">'+
 									'<input type="text" class="form-control" id="cdgValidacao" aria-describedby="cdgValidacao" placeholder="Código">'+
 								'</div>'+
-								'<button type="button" class="btn btn-default" id="btnValidacao"> Validar Código </button>';
+								'<button type="button" class="btn btn-default" id="btnValidacao"> Validar Código </button>'+
+								'<button type="button" class="btn btn-default" id="btnCheck"></button>';
 
 					$("#validacaoDownload").append(htmlValida);
 
@@ -179,7 +193,6 @@ header('Content-Type: text/html; charset=utf-8');
 
 		    });
 		}else{
-			console.log("errado");
 			$('#msgs').html("<i class='fa fa-times'></i> Endereço de email invalido!");
 			$('#msgs').removeClass("green");
 			$('#msgs').addClass("red");
@@ -193,12 +206,26 @@ header('Content-Type: text/html; charset=utf-8');
 		postCdg.push({name: 'codigo', value: cdgValidacao});
         postCdg.push({name: 'type', value: 'VALIDACAO'});
 
+        $('#btnCheck').html('<i class="fa fa-spinner fa-spin" style="font-size:14px"></i>');
+
  		$.ajax({
 	        url: "iluminar.php",
 	        type: "post",
 	        data: postCdg,
 	        success: function (response) {
-	        	console.log(response);    
+	        	if(response == 'CDG_SUC'){
+	        		$('#btnCheck').removeClass();
+					$('#btnCheck').addClass('btn-success');
+					$('#btnCheck').html("<i class='fa fa-check'></i>");
+    				$('#msgs').html("<i class='fa fa-check'></i> Obrigado! O seu download está disponivel agora.");
+					$('#validacaoDownload').fadeOut(1000);
+
+	        	}else{
+	        		$('#btnCheck').removeClass();
+					$('#btnCheck').addClass('btn-danger');
+					$('#btnCheck').html("<i class='fa fa-times'></i>");
+
+	        	}    
 	        },
 	        error: function(jqXHR, textStatus, errorThrown) {
 	           console.log(textStatus, errorThrown);
