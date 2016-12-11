@@ -1,5 +1,6 @@
 <?php
 require 'PHPMailer/PHPMailerAutoload.php';
+require 'config.php';
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -70,13 +71,27 @@ header('Content-Type: text/html; charset=utf-8');
 
 		if (in_array($cdgUser, $cdgs_array)) {
 		    echo "CDG_SUC";
-		    exit();
+		    
+			try{
+				$emailUser = $_POST['emailUser'];
+				$date = date_default_timezone_get();
+
+				$db = getDB();
+				$query = 'INSERT INTO emails (email,dtcadastro) VALUES(:email,:dtcadastro)';
+				$query_prep = $db->prepare($query);
+				$data = ['email'=>$emailUser,'dtcadastro'=>date('Y-m-d H:i:s', strtotime($date))];
+				$result = $query_prep->execute($data);
+				
+			}catch(PDOException $e) {
+					echo '{"error":{"text":'. $e->getMessage() .'}}';
+				}
+
+			    exit();
+
 		}else{
 			echo "CDG_ERR";
 		    exit();
 		}
-
-		exit();
 	}
 ?>
 
@@ -125,7 +140,7 @@ header('Content-Type: text/html; charset=utf-8');
 	</div>
 
 		<form>			
-			<div class="form-group">
+			<div id="inputEmail" class="form-group">
 				<input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Endereço de Email">
 				<small id="emailHelp" class="form-text text-muted">*Prometemos não utilizar suas informações de contato para enviar qualquer tipo de SPAM</small>
 			</div>
@@ -178,7 +193,7 @@ header('Content-Type: text/html; charset=utf-8');
 		        success: function (response) {
     				$('#msgs').html("<i class='fa fa-check'></i> Um codigo foi enviado para você. Informe-o para iniciar o download!");
 					$('#msgs').removeClass("red");
-					$('#msgs').addClass("green");
+					$('#msgs').addClass("green");					
 					$('#btnEmail').fadeOut(1000);
 
 					htmlValida = '<div class="form-group col-xs-2">'+
@@ -206,10 +221,11 @@ header('Content-Type: text/html; charset=utf-8');
 
 	$(document).on('click','#btnValidacao',function(){
 		var cdgValidacao = $('#cdgValidacao').val();
-
+		var email = $('#email').val();
 		var postCdg = [];
 		postCdg.push({name: 'codigo', value: cdgValidacao});
         postCdg.push({name: 'type', value: 'VALIDACAO'});
+        postCdg.push({name: 'emailUser', value: email});
 
         $('#btnCheck').html('<i class="fa fa-spinner fa-spin" style="font-size:14px"></i>');
 
@@ -218,13 +234,16 @@ header('Content-Type: text/html; charset=utf-8');
 	        type: "post",
 	        data: postCdg,
 	        success: function (response) {
-	        	if(response == 'CDG_SUC'){
+	        	console.log(response);
+	        	constraint_violation = response.indexOf('constraint violation');
+	        	if(response == 'CDG_SUC' || constraint_violation !== -1){
 	        		$('#btnCheck').attr('style','display:');
 	        		$('#btnCheck').removeClass();
 					$('#btnCheck').addClass('btn-success');
 					$('#btnCheck').html("<i class='fa fa-check'></i>");
     				$('#msgs').html("<i class='fa fa-check'></i> Obrigado! O seu download está disponivel agora.");
 					$('#validacaoDownload').fadeOut(1000);
+					$('#inputEmail').fadeOut(1000);
 					$('#btnDownload').attr('style','display:block');
 
 	        	}else{
